@@ -1,0 +1,40 @@
+# defaultEntryPoints must be at the top because it should not be in any table below
+defaultEntryPoints = ["http", "https"]
+
+## Logs
+[log]
+    level = "DEBUG"
+
+[api]
+  debug = true
+  dashboard = true
+
+[certificatesResolvers.letsencrypt.acme]
+  email = "it@knawat.com"
+  storage = "/letsencrypt/acme.json"
+  [certificatesResolvers.letsencrypt.acme.tlsChallenge]
+
+# Entrypoints, http and https
+[entryPoints]
+# http should be redirected to https
+  [entryPoints.http]
+    address = ":80"
+    [entryPoints.http.http.redirections.entryPoint]
+      to = "https"
+      scheme = "https"
+
+# https is the default
+  [entryPoints.https]
+    address = ":443"
+
+# Dashboard
+  [entryPoints.dashboard]
+    address = ":8080"
+
+[providers.docker]
+    endpoint = "unix:///var/run/docker.sock"
+    watch = true
+    exposedByDefault = false
+
+[providers.file]
+    filename = "traefik_dynamic.toml"

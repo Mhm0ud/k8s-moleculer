@@ -1,0 +1,12 @@
+[http.middlewares.simpleAuth.basicAuth]
+    users = [
+        "__TRAEFIK_DASHBOARD_PASSWORD__"
+]
+
+[http.routers.api]
+    rule = "Host(`m.almasri622.knawat.io`)"
+    middlewares = ["simpleAuth"]
+    service = "api@internal"
+    entryPoints = "dashboard"
+    [http.routers.api.tls]
+        certResolver = "letsencrypt"

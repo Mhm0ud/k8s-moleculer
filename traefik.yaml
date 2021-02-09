@@ -1,0 +1,45 @@
+defaultEntryPoints:
+  - http
+  - https
+log:
+  level: DEBUG
+api:
+  debug: true
+  dashboard: true
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: it@knawat.com
+      storage: acme.json
+      httpChallenge:
+        entryPoint: http
+
+entryPoints:
+  http:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: https
+          scheme: https
+  https:
+    address: ":443"
+    http:
+      tls:
+        certResolver: letsencrypt
+        domains:
+          - main: m.almasri622.knawat.io
+  dashboard:
+    address: ":8080"
+    http:
+      redirections:
+        entryPoint:
+          to: https
+          scheme: https
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    watch: true
+    exposedByDefault: false
+  file:
+    filename: traefik_dynamic.toml

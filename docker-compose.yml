@@ -1,0 +1,85 @@
+version: "3.0"
+
+services:
+
+  api:
+    image: moleculer/demo
+    restart: unless-stopped
+    env_file: docker-compose.env
+    environment:
+      SERVICES: api
+      PORT: 3000
+    labels:
+      - traefik.enable=true
+      - traefik.http.services.api.loadbalancer.server.port=3000
+      - traefik.http.routers.api.entrypoints=http,https
+      - traefik.http.routers.api.rule=Host(`m.almasri622.knawat.io`)
+      - traefik.http.routers.api.tls=true
+      - traefik.http.routers.api.tls.certresolver=letsencrypt
+    depends_on:
+      - nats
+
+
+
+  greeter:
+    image: moleculer/demo
+    restart: unless-stopped
+    env_file: docker-compose.env
+    environment:
+      SERVICES: greeter
+    depends_on:
+      - nats
+
+  calc:
+    image: moleculer/demo
+    restart: unless-stopped
+    env_file: docker-compose.env
+    environment:
+      SERVICES: calc
+    depends_on:
+      - nats
+
+  products:
+    image: moleculer/demo
+    restart: unless-stopped
+    env_file: docker-compose.env
+    environment:
+      SERVICES: products
+    depends_on:
+      - nats
+      - mongo
+
+  # NATS for transporter
+  nats:
+    image: nats
+    ports:
+      - "4222:4222"
+    restart: unless-stopped
+
+  # Database store
+  mongo:
+    image: mongo
+    volumes:
+      - db:/data/db
+    restart: unless-stopped
+
+  # Reverse proxy for API server
+  traefik:
+    image: traefik:v2.4
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "8080:8080"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik.toml:/traefik.toml
+      - ./traefik_dynamic.toml:/traefik_dynamic.toml
+      - ./letsencrypt:/letsencrypt
+    labels:
+      - "traefik.http.routers.http-catchall.rule=hostregexp(`{host:.+}`)"
+      - "traefik.http.routers.http-catchall.entrypoints=web"
+
+volumes:
+  db:
+    driver: local
